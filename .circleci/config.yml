@@ -1,0 +1,13 @@
+# Rust CircleCI 2.1 configuration file
+#
+# Check https://github.com/CircleCI-Public/cimg-rust for more details
+version: 2.1
+jobs:
+  build:
+    docker:
+      # specify the version
+      - image: cimg/rust:1.43.0
+    steps:
+      - checkout
+      - run: cargo --version
+      - run: cargo build
