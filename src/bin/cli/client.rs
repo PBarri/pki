@@ -1,7 +1,7 @@
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-pub struct InitCommand {
+pub struct ClientCommand {
     /// The CA name to initialize.
     #[structopt(long, short)]
     pub ca_name: Option<String>,

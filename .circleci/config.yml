@@ -2,12 +2,57 @@
 #
 # Check https://github.com/CircleCI-Public/cimg-rust for more details
 version: 2.1
-jobs:
-  build:
+
+# Define the rust environment to execute the jobs
+executors:
+  rust-executor: 
     docker:
-      # specify the version
       - image: cimg/rust:1.43.0
+
+jobs:
+  # Build job. Ensures that code is compiling
+  build:
+    executor: rust-executor
     steps:
       - checkout
-      - run: cargo --version
+      - restore_cache: 
+          keys:
+          - cargo-cache-v1-{{ checksum "Cargo.lock" }}
       - run: cargo build
+      - save_cache:
+          paths:
+            - /usr/local/cargo/registry
+            - target
+          key: cargo-cache-v1-{{ checksum "Cargo.lock" }}
+  # Test job. Ensures that test are passing
+  test:
+    executor: rust-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - cargo-cache-v1-{{ checksum "Cargo.locl" }}
+      - run: cargo test --all
+  # Release job. Creates the executable files and store them
+  release:
+      executor: rust-executor
+      steps:
+        - checkout
+        - restore_cache:
+            keys: 
+              - cargo-cache-v1-{{ checksum "Cargo.locl" }}
+        - run: cargo build --release
+        - store_artifacts:
+            path: target/release
+
+workflows: 
+  version: 2
+  build: 
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - release:
+          requires:
+            - test
