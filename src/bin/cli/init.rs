@@ -2,6 +2,10 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 pub struct InitCommand {
+
+    /// The PKI name
+    pub pki: Option<String>,
+
     /// The CA name to initialize.
     #[structopt(long, short)]
     pub ca_name: Option<String>,

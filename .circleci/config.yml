@@ -34,7 +34,7 @@ jobs:
             - cargo-cache-v1-{{ checksum "Cargo.lock" }}
       - run: cargo test --all
   # Release job. Creates the executable files and store them
-  release:
+  release-linux:
       executor: rust-executor
       steps:
         - checkout
@@ -43,7 +43,7 @@ jobs:
               - cargo-cache-v1-{{ checksum "Cargo.lock" }}
         - run: cargo build --release
         - store_artifacts:
-            path: target/release
+            path: target/release/pki
 
 workflows: 
   version: 2
@@ -53,6 +53,6 @@ workflows:
       - test:
           requires:
             - build
-      - release:
+      - release-linux:
           requires:
             - test
