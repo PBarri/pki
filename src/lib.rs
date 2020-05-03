@@ -13,6 +13,7 @@ pub mod pki {
         use std::fs;
         use std::io::prelude::*;
         use std::process;
+        use resource::resource;
 
         /// Creates a new CA
         pub fn create_ca(pki_name: &str, ca_name: &str, key_size: u16) -> std::io::Result<()> {
@@ -56,14 +57,22 @@ pub mod pki {
             // Creates the index.txt file
             fs::File::create(format!("{dir}/index.txt", dir = ca_dir))?;
 
+            // Creates default openssl.cnf file.
+            // TODO: Change this for default installation urls!
+            //let default_conf = resource::resource_str!("resources/openssl.cnf");
+
+            let default_conf = resource!("resources/openssl.cnf"); 
+
+            let mut conf_file = fs::File::create(format!("{dir}/openssl.cnf", dir = ca_dir))?;
+            conf_file.write_all(default_conf.as_ref())?;
+
             // Create the self-signed certificate
-            let command = format!("openssl req -x509 -config openssl.cnf -newkey rsa:{} -days 365 -out {}/ca_certificate.pem -outform PEM -subj /CN={}/ -nodes", 
-                key_size, 
-                ca_dir.as_str(), 
-                ca_name);
+            let command = format!("openssl req -x509 -config {ca_dir}/openssl.cnf -newkey rsa:4096 -days 365 -out {ca_dir}/ca_certificate.pem -outform PEM -subj /CN={ca_name}/ -nodes", 
+                ca_dir = ca_dir.as_str(), 
+                ca_name = ca_name);
             let mut cmd: process::Command = super::execute_command(command.as_str());
             cmd.output().expect("There was an error generating the self-signed certificate for the CA");
-
+            
             Ok(())
         }
 
@@ -135,7 +144,7 @@ pub mod pki {
 
     /// Function that handles the OS abstraction and creates the required shell. Returns a std::process::Command
     fn execute_command(command: &str) -> process::Command {
-        println!("Executing command!");
+        println!("Executing command: {}", command);
         let shell = if cfg!(unix) {
             "sh"
         } else if cfg!(windows) {
