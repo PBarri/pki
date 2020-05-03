@@ -1,6 +1,7 @@
 pub mod pki {
 
     use std::process;
+    use std::fs;
 
     // TODO: Add logging
     // TODO: Check and handle errors!
@@ -67,11 +68,14 @@ pub mod pki {
             conf_file.write_all(default_conf.as_ref())?;
 
             // Create the self-signed certificate
-            let command = format!("openssl req -x509 -config {ca_dir}/openssl.cnf -newkey rsa:4096 -days 365 -out {ca_dir}/ca_certificate.pem -outform PEM -subj /CN={ca_name}/ -nodes", 
-                ca_dir = ca_dir.as_str(), 
+            let command = format!("openssl req -x509 -config openssl.cnf -newkey rsa:4096 -days 365 -out ca_certificate.pem -outform PEM -subj /CN={ca_name}/ -nodes",  
                 ca_name = ca_name);
-            let mut cmd: process::Command = super::execute_command(command.as_str());
-            cmd.output().expect("There was an error generating the self-signed certificate for the CA");
+            let mut cmd: process::Command = super::execute_command(ca_dir.as_str(), command.as_str())?;
+            
+            let output = cmd.output().expect("There was an error generating the self-signed certificate for the CA");
+            println!("status: {}", output.status);
+            println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+            println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
             
             Ok(())
         }
@@ -143,19 +147,27 @@ pub mod pki {
     }
 
     /// Function that handles the OS abstraction and creates the required shell. Returns a std::process::Command
-    fn execute_command(command: &str) -> process::Command {
-        println!("Executing command: {}", command);
-        let shell = if cfg!(unix) {
-            "sh"
-        } else if cfg!(windows) {
-            "cmd"
+    fn execute_command(path: &str, command: &str) -> Result<process::Command, std::io::Error> {
+
+        let absolute_path = fs::canonicalize(path)?;
+        let abs_path_str = absolute_path.to_str().expect("The path is not valid");
+
+
+        println!("Executing command: {}/>{}", abs_path_str, command);
+        let mut cli: process::Command;
+
+        if cfg!(target_os = "windows") {
+            cli = process::Command::new("cmd");
+            cli.args(&["/C", "echo hello"]);
         } else {
-            "unknown"
+            cli = process::Command::new("sh");
+            cli.arg("-c");
         };
 
-        let mut cli = process::Command::new(shell);
+        //let mut cli = process::Command::new(shell);
         cli.arg(command);
+        cli.current_dir(abs_path_str);
 
-        return cli;
+        return Ok(cli);
     }
 }
