@@ -3,8 +3,7 @@
 use structopt::StructOpt;
 pub use super::ca::*;
 pub use super::init::*;
-pub use super::client::*;
-pub use super::server::*;
+pub use super::certificate::*;
 
 /// PKI Management tool.
 /// A command line application to manage minimal local PKI installations for testing.
@@ -38,9 +37,9 @@ pub enum Subcommands {
 
     /// Creates a new client certificate
     #[structopt(name = "client")]
-    CLIENT(ClientCommand),
+    CLIENT(CertificateCommand),
 
     /// Creates a new server certificate
     #[structopt(name = "server")]
-    SERVER(ServerCommand),
+    SERVER(CertificateCommand),
 }

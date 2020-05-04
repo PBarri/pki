@@ -31,14 +31,26 @@ fn init_command_execution(cmd: InitCommand) {
     pki::ca::create_ca(pki.as_str(), ca_name.as_str(), key_size).expect("There was an error creating the CA");
 }
 
-fn client_command_execution(cmd: ClientCommand) {
+fn client_command_execution(cmd: CertificateCommand) {
     println!("Command options: {:?}", cmd);
-    pki::client::create_client_certificate();
+
+    let pki = cmd.pki.unwrap_or("testPki".to_string());
+    let ca_name = cmd.ca_name.unwrap_or("defaultCa".to_string());
+    let cert_name = cmd.name.expect("The name of the certificate must be provided");
+    // let key_size: u16 = cmd.key_size.unwrap_or(4096);
+
+    pki::client::create_client_certificate(pki.as_str(), ca_name.as_str(), cert_name.as_str()).expect("There was a problem creating the client certificate");    
 }
 
-fn server_command_execution(cmd: ServerCommand) {
+fn server_command_execution(cmd: CertificateCommand) {
     println!("Command options: {:?}", cmd);
-    pki::server::create_server_certificate();
+
+    let pki = cmd.pki.unwrap_or("testPki".to_string());
+    let ca_name = cmd.ca_name.unwrap_or("defaultCa".to_string());
+    let cert_name = cmd.name.expect("The name of the certificate must be provided");
+    // let key_size: u16 = cmd.key_size.unwrap_or(4096);
+
+    pki::server::create_server_certificate(pki.as_str(), ca_name.as_str(), cert_name.as_str()).expect("There was a problem creating the server certificate");
 }
 
 fn ca_command_execution(cmd: CaCommand) {
